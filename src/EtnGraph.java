@@ -5,11 +5,12 @@ public class EtnGraph {
     // adjacency list sender -> list of receivers
     private HashMap<String, ArrayList<String>> adjacencyList;
 
+
     // constructor
     public EtnGraph() {
-        adjacencyList = new HashMap<>();
+        adjacencyList = new HashMap<>(200);
     }
-int c = 0;
+
     // add sender-receiver pair to adjacency list
     // TODO: fix function to avoid duplicates
     public void addTransaction(String sender, String receiver) {
@@ -19,6 +20,10 @@ int c = 0;
             adjacencyList.put(sender, receivers);
         }
         receivers.add(receiver);
+    }
+
+    public int getNumberOfNodes() {
+        return adjacencyList.size();
     }
 
 

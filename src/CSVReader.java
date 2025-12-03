@@ -7,17 +7,29 @@ public class CSVReader {
 
 
     public void readETN(String filePath, EtnGraph etnGraph) throws FileNotFoundException {
-        BufferedReader br = new BufferedReader(new java.io.FileReader(filePath));
+        // size for buffer reader 64KB, to speed up reading large files
+        BufferedReader br = new BufferedReader(new java.io.FileReader(filePath), 65536);
         String line;
         try {
             while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                String sender = values[5].intern();
-                String receiver = values[6].intern();
-                // use method from etngraph to add to adj list
-                etnGraph.addTransaction(sender, receiver);
+                int col = 0;
+                int start = 0;
+                String sender = null;
+                String receiver = null;
 
+                for (int i = 0; i < line.length(); i++) {
+                    if (line.charAt(i) == ',') {
+                        if (col == 5) sender = line.substring(start, i).intern();
+                        if (col == 6) receiver = line.substring(start, i).intern();
+                        col++;
+                        start = i + 1;
+                        if (col > 6) break;
+                    }
+                }
+
+                etnGraph.addTransaction(sender, receiver);
             }
+
             br.close();
 
         }catch (Exception e){
