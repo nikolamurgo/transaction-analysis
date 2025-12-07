@@ -2,21 +2,23 @@ import java.util.*;
 
 public class EtnGraph {
 
-    // adjacency list sender -> list of receivers
-    private HashMap<String, ArrayList<String>> adjacencyList;
-
+    // adjacency list sender -> set of receivers
+    public static HashMap<String, HashSet<String>> adjacencyList;
 
     // constructor
     public EtnGraph() {
-        adjacencyList = new HashMap<>(200);
+        adjacencyList = new HashMap<>();
     }
 
     // add sender-receiver pair to adjacency list
-    // TODO: fix function to avoid duplicates
     public void addTransaction(String sender, String receiver) {
-        ArrayList<String> receivers = adjacencyList.get(sender);
+        if(BlacklistReader.blacklistedAddresses.contains(sender) || BlacklistReader.blacklistedAddresses.contains(receiver)) {
+            return;
+        }
+
+        HashSet<String> receivers = adjacencyList.get(sender);
         if (receivers == null) {
-            receivers = new ArrayList<>(2);
+            receivers = new HashSet<>();
             adjacencyList.put(sender, receivers);
         }
         receivers.add(receiver);
@@ -25,9 +27,6 @@ public class EtnGraph {
     public int getNumberOfNodes() {
         return adjacencyList.size();
     }
-
-
-    // TODO : remove blacklisted nodes from the adjacency list
 
 
 }

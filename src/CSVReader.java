@@ -38,8 +38,6 @@ public class CSVReader {
 
     }
 
-    // TODO: read blacklist files
-
 
     // TODO: read nft boredapeyachtclub file
 
