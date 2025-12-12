@@ -3,7 +3,7 @@ import java.util.*;
 public class EtnGraph {
 
     // adjacency list sender -> set of receivers
-    public static HashMap<String, HashSet<String>> adjacencyList;
+    public HashMap<String, HashSet<String>> adjacencyList;
 
     // constructor
     public EtnGraph() {

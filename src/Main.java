@@ -9,9 +9,10 @@ public class Main {
         Long startTime = System.currentTimeMillis();
 
         // load the blacklisted addresses into a hashset
+        Logger.info("Loading blacklisted addresses...");
         BlacklistReader blacklistReader = new BlacklistReader();
         blacklistReader.readBlacklist();
-        Logger.info("Blacklisted addresses loaded. "+"Count: " + BlacklistReader.blacklistedAddresses.size());
+        Logger.debug("Blacklisted addresses loaded. "+"Count: " + BlacklistReader.blacklistedAddresses.size());
 
         // initialize the csv reader and the etnGraph
         CSVReader csvReader = new CSVReader();
@@ -21,11 +22,18 @@ public class Main {
         Logger.info("Loading EtnGraph...");
         // read the etn csv, add addresses to adjacency list, skip blacklisted addresses
         csvReader.readETN("data/prog3ETNsample.csv", etnGraph);
+        Logger.debug("Number of nodes in adj list: "+ etnGraph.getNumberOfNodes());
 
+
+        Logger.info("Loading NFT addresses...");
+        NFTAddresses nftAddresses = new NFTAddresses();
+        // read the boredapeyachtclub csv, add addresses to nftAddresses hashset, skip blacklisted and duplicate addresses
+        csvReader.readNFTfile("data/boredapeyachtclub.csv", nftAddresses);
+        Logger.debug("Number of blacklisted NFT addresses removed: " + NFTAddresses.getRemovedCount()); // development purpose
+        Logger.debug("Number of duplicate NFT addresses removed: " + NFTAddresses.getDuplicateCount()); // development purpose
 
         Long endTime = System.currentTimeMillis();
         Logger.info("Total time: " + (endTime - startTime) * 0.001 + " seconds");
-        Logger.info("Number of nodes in adj list: "+ etnGraph.getNumberOfNodes());
 
         Logger.info("Application ended.");
 
