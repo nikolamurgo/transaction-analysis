@@ -12,7 +12,7 @@ public class Main {
         Logger.info("Loading blacklisted addresses...");
         BlacklistReader blacklistReader = new BlacklistReader();
         blacklistReader.readBlacklist();
-        Logger.debug("Blacklisted addresses loaded. "+"Count: " + BlacklistReader.blacklistedAddresses.size());
+        Logger.debug("Blacklisted addresses loaded. "+"Count: " + blacklistReader.getBlacklistSize());
 
         // initialize the csv reader and the etnGraph
         CSVReader csvReader = new CSVReader();
@@ -26,11 +26,8 @@ public class Main {
 
 
         Logger.info("Loading NFT addresses...");
-        NFTAddresses nftAddresses = new NFTAddresses();
         // read the boredapeyachtclub csv, add addresses to nftAddresses hashset, skip blacklisted and duplicate addresses
-        csvReader.readNFTfile("data/boredapeyachtclub.csv", nftAddresses);
-        Logger.debug("Number of blacklisted NFT addresses removed: " + NFTAddresses.getRemovedCount()); // development purpose
-        Logger.debug("Number of duplicate NFT addresses removed: " + NFTAddresses.getDuplicateCount()); // development purpose
+        csvReader.readNFTfile("data/boredapeyachtclub.csv");
 
         Long endTime = System.currentTimeMillis();
         Logger.info("Total time: " + (endTime - startTime) * 0.001 + " seconds");

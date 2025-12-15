@@ -20,8 +20,8 @@ public class CSVReader {
 
                 for (int i = 0; i < line.length(); i++) {
                     if (line.charAt(i) == ',') {
-                        if (col == 5) sender = line.substring(start, i).intern();
-                        if (col == 6) receiver = line.substring(start, i).intern();
+                        if (col == 5) sender = line.substring(start, i);
+                        if (col == 6) receiver = line.substring(start, i);
                         col++;
                         start = i + 1;
                         if (col > 6) break;
@@ -41,7 +41,7 @@ public class CSVReader {
 
 
     // read the boredapeyachclub csv
-    public void readNFTfile(String filePath, NFTAddresses nftAddresses) throws FileNotFoundException {
+    public void readNFTfile(String filePath) throws FileNotFoundException {
         BufferedReader br = new BufferedReader(new FileReader(filePath));
         String line;
         String sender;
@@ -54,8 +54,8 @@ public class CSVReader {
                 parts = line.split(",");
                 sender = parts[4].trim();
                 receiver = parts[5].trim();
-                nftAddresses.addNFTAddress(sender);
-                nftAddresses.addNFTAddress(receiver);
+                NFTAddresses.addNFTAddress(sender);
+                NFTAddresses.addNFTAddress(receiver);
             }
             Logger.info("NFT addresses loaded. Count: " + NFTAddresses.nftAddresses.size());
             br.close();

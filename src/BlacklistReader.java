@@ -36,4 +36,8 @@ public class BlacklistReader {
 
     }
 
+    public int getBlacklistSize(){
+        return blacklistedAddresses.size();
+    }
+
 }
