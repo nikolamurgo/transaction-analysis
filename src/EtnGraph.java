@@ -24,6 +24,47 @@ public class EtnGraph {
         receivers.add(receiver);
     }
 
+    // build linkability network using BFS up to maxDepth DEFINED IN MAIN
+    public void buildLinkabilityNetwork(LinkabilityNetwork linkNet, int maxDepth) {
+
+        for (String start : NFTAddresses.nftAddresses) {
+
+            Queue<String> queue = new LinkedList<>();
+            HashMap<String, Integer> distance = new HashMap<>();
+            HashSet<String> visited = new HashSet<>();
+
+            queue.add(start);
+            visited.add(start);
+            distance.put(start, 0);
+
+            while (!queue.isEmpty()) {
+                String current = queue.poll();
+                int currentDistance = distance.get(current);
+
+                if (currentDistance >= maxDepth) {
+                    continue;
+                }
+
+                HashSet<String> neighbors = adjacencyList.get(current);
+                if (neighbors == null) continue;
+
+                for (String neighbor : neighbors) {
+
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        queue.add(neighbor);
+                        distance.put(neighbor, currentDistance + 1);
+
+                        if (NFTAddresses.nftAddresses.contains(neighbor) && !neighbor.equals(start)) {
+                            LinkabilityNetwork.addEdge(start, neighbor, currentDistance + 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
     public int getNumberOfNodes() {
         return adjacencyList.size();
     }

@@ -5,6 +5,9 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+
+        int MAX_DEPTH = 3;
+
         Logger.info("Application started.");
         Long startTime = System.currentTimeMillis();
 
@@ -28,6 +31,18 @@ public class Main {
         Logger.info("Loading NFT addresses...");
         // read the boredapeyachtclub csv, add addresses to nftAddresses hashset, skip blacklisted and duplicate addresses
         csvReader.readNFTfile("data/boredapeyachtclub.csv");
+
+        Logger.info("Building Linkability Network...");
+        LinkabilityNetwork linkNet = new LinkabilityNetwork();
+        etnGraph.buildLinkabilityNetwork(linkNet,MAX_DEPTH);
+        Logger.info("Linkability Network built.");
+
+        LinkabilityNetwork.exportToCSV("data/linkability.csv");
+        Logger.info("Linkability Network exported to CSV.");
+
+        Logger.info("Weight counts in Linkability Network:");
+        LinkabilityNetwork.printWeightCounts();
+
 
         Long endTime = System.currentTimeMillis();
         Logger.info("Total time: " + (endTime - startTime) * 0.001 + " seconds");
