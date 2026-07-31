@@ -1,8 +1,9 @@
-import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class NFTAddresses {
 
-    public static HashSet<String> nftAddresses = new HashSet<>();
+    public static Set<String> nftAddresses = ConcurrentHashMap.newKeySet();
 
 
     public static void addNFTAddress(String address) {

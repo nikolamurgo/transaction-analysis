@@ -18,7 +18,34 @@ public class ParallelLineReader {
 
         BlockingQueue<String> queue = new LinkedBlockingQueue<>(10_000);
 
-        Thread producer = new Thread(() -> {
+        Thread producer = new Thread(new ProducerTask(filePath, skipHeader, workerCount, queue));
+
+        Thread[] consumers = new Thread[workerCount];
+        for (int i = 0; i < workerCount; i++) {
+            consumers[i] = new Thread(new ConsumerTask(queue, lineHandler));
+        }
+
+        producer.start();
+        for (Thread consumer : consumers) consumer.start();
+
+        producer.join();
+        for (Thread consumer : consumers) consumer.join();
+    }
+
+    private static class ProducerTask implements Runnable {
+        private final String filePath;
+        private final boolean skipHeader;
+        private final int workerCount;
+        private final BlockingQueue<String> queue;
+
+        ProducerTask(String filePath, boolean skipHeader, int workerCount, BlockingQueue<String> queue) {
+            this.filePath = filePath;
+            this.skipHeader = skipHeader;
+            this.workerCount = workerCount;
+            this.queue = queue;
+        }
+
+        public void run() {
             try (BufferedReader br = new BufferedReader(new FileReader(filePath), 65536)) {
                 if (skipHeader) br.readLine();
 
@@ -39,26 +66,27 @@ public class ParallelLineReader {
                     }
                 }
             }
-        });
+        }
+    }
 
-        Thread[] consumers = new Thread[workerCount];
-        for (int i = 0; i < workerCount; i++) {
-            consumers[i] = new Thread(() -> {
-                try {
-                    String line;
-                    while ((line = queue.take()) != POISON_PILL) {
-                        lineHandler.accept(line);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            });
+    private static class ConsumerTask implements Runnable {
+        private final BlockingQueue<String> queue;
+        private final Consumer<String> lineHandler;
+
+        ConsumerTask(BlockingQueue<String> queue, Consumer<String> lineHandler) {
+            this.queue = queue;
+            this.lineHandler = lineHandler;
         }
 
-        producer.start();
-        for (Thread consumer : consumers) consumer.start();
-
-        producer.join();
-        for (Thread consumer : consumers) consumer.join();
+        public void run() {
+            try {
+                String line;
+                while ((line = queue.take()) != POISON_PILL) {
+                    lineHandler.accept(line);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

@@ -1,13 +1,14 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EtnGraph {
 
     // adjacency list sender -> set of receivers
-    public HashMap<String, HashSet<String>> adjacencyList;
+    public ConcurrentHashMap<String, Set<String>> adjacencyList;
 
     // constructor
     public EtnGraph() {
-        adjacencyList = new HashMap<>();
+        adjacencyList = new ConcurrentHashMap<>();
     }
 
     // add sender-receiver pair to adjacency list
@@ -16,10 +17,11 @@ public class EtnGraph {
             return;
         }
 
-        HashSet<String> receivers = adjacencyList.get(sender);
+        Set<String> receivers = adjacencyList.get(sender);
         if (receivers == null) {
-            receivers = new HashSet<>();
-            adjacencyList.put(sender, receivers);
+            Set<String> newSet = ConcurrentHashMap.newKeySet();
+            Set<String> existing = adjacencyList.putIfAbsent(sender, newSet);
+            receivers = (existing != null) ? existing : newSet;
         }
         receivers.add(receiver);
     }
@@ -45,7 +47,7 @@ public class EtnGraph {
                     continue;
                 }
 
-                HashSet<String> neighbors = adjacencyList.get(current);
+                Set<String> neighbors = adjacencyList.get(current);
                 if (neighbors == null) continue;
 
                 for (String neighbor : neighbors) {
