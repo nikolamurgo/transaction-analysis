@@ -26,42 +26,94 @@ public class EtnGraph {
         receivers.add(receiver);
     }
 
-    // build linkability network using BFS up to maxDepth DEFINED IN MAIN
-    public void buildLinkabilityNetwork(LinkabilityNetwork linkNet, int maxDepth) {
+    // build linkability network using BFS up to maxDepth, 1 bfs per nft adr
+    // addresses split into groups so multiple threads run bfs at once
+    public void buildLinkabilityNetwork(LinkabilityNetwork linkNet, int maxDepth) throws InterruptedException {
 
-        for (String start : NFTAddresses.nftAddresses) {
+        int threadCount = Runtime.getRuntime().availableProcessors();
+        List<List<String>> groups = splitIntoGroups(new ArrayList<>(NFTAddresses.nftAddresses), threadCount);
 
-            Queue<String> queue = new LinkedList<>();
-            HashMap<String, Integer> distance = new HashMap<>();
-            HashSet<String> visited = new HashSet<>();
+        Thread[] workers = new Thread[groups.size()];
+        for (int i = 0; i < groups.size(); i++) {
+            workers[i] = new Thread(new BfsWorker(this, groups.get(i), maxDepth));
+        }
 
-            queue.add(start);
-            visited.add(start);
-            distance.put(start, 0);
+        for (int i = 0; i < workers.length; i++) {
+            workers[i].start();
+        }
+        for (int i = 0; i < workers.length; i++) {
+            workers[i].join();
+        }
+    }
 
-            while (!queue.isEmpty()) {
-                String current = queue.poll();
-                int currentDistance = distance.get(current);
+    // splits addresses into up to groupCount  equal sublists
+    private static List<List<String>> splitIntoGroups(List<String> addresses, int groupCount) {
+        List<List<String>> groups = new ArrayList<>();
+        int size = addresses.size();
+        if (size == 0) return groups;
 
-                if (currentDistance >= maxDepth) {
-                    continue;
-                }
+        int groupSize = (int) Math.ceil((double) size / groupCount);
+        int start = 0;
+        while (start < size) {
+            int end = Math.min(size, start + groupSize);
+            groups.add(addresses.subList(start, end));
+            start = end;
+        }
+        return groups;
+    }
 
-                Set<String> neighbors = adjacencyList.get(current);
-                if (neighbors == null) continue;
+    private void bfsFrom(String start, int maxDepth) {
+        Queue<String> queue = new LinkedList<>();
+        HashMap<String, Integer> distance = new HashMap<>();
+        HashSet<String> visited = new HashSet<>();
 
-                for (String neighbor : neighbors) {
+        queue.add(start);
+        visited.add(start);
+        distance.put(start, 0);
 
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        queue.add(neighbor);
-                        distance.put(neighbor, currentDistance + 1);
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            int currentDistance = distance.get(current);
 
-                        if (NFTAddresses.nftAddresses.contains(neighbor) && !neighbor.equals(start)) {
-                            LinkabilityNetwork.addEdge(start, neighbor, currentDistance + 1);
-                        }
+            if (currentDistance >= maxDepth) {
+                continue;
+            }
+
+            Set<String> neighbors = adjacencyList.get(current);
+            if (neighbors == null) continue;
+
+            Iterator<String> neighborIt = neighbors.iterator();
+            while (neighborIt.hasNext()) {
+                String neighbor = neighborIt.next();
+
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    queue.add(neighbor);
+                    distance.put(neighbor, currentDistance + 1);
+
+                    if (NFTAddresses.nftAddresses.contains(neighbor) && !neighbor.equals(start)) {
+                        LinkabilityNetwork.addEdge(start, neighbor, currentDistance + 1);
                     }
                 }
+            }
+        }
+    }
+
+    // runs BFS for one group of NFT addresses on its own thread
+    private static class BfsWorker implements Runnable {
+        private final EtnGraph etnGraph;
+        private final List<String> starts;
+        private final int maxDepth;
+
+        BfsWorker(EtnGraph etnGraph, List<String> starts, int maxDepth) {
+            this.etnGraph = etnGraph;
+            this.starts = starts;
+            this.maxDepth = maxDepth;
+        }
+
+        public void run() {
+            for (int i = 0; i < starts.size(); i++) {
+                etnGraph.bfsFrom(starts.get(i), maxDepth);
             }
         }
     }

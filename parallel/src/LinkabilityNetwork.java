@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LinkabilityNetwork {
@@ -26,9 +27,15 @@ public class LinkabilityNetwork {
     public static void exportToCSV(String filePath) {
         try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(filePath))) {
 
-            for (String sender : linkabilityAdjacencyList.keySet()) {
-                for (String receiver : linkabilityAdjacencyList.get(sender).keySet()) {
-                    int weight = linkabilityAdjacencyList.get(sender).get(receiver);
+            Iterator<String> senderIt = linkabilityAdjacencyList.keySet().iterator();
+            while (senderIt.hasNext()) {
+                String sender = senderIt.next();
+                ConcurrentHashMap<String, Integer> receivers = linkabilityAdjacencyList.get(sender);
+
+                Iterator<String> receiverIt = receivers.keySet().iterator();
+                while (receiverIt.hasNext()) {
+                    String receiver = receiverIt.next();
+                    int weight = receivers.get(receiver);
                     pw.println(sender + "," + receiver + "," + weight);
                 }
             }
@@ -42,14 +49,20 @@ public class LinkabilityNetwork {
     public static void printWeightCounts() {
         HashMap<Integer, Integer> weightCounts = new HashMap<>();
 
-        for (ConcurrentHashMap<String, Integer> receivers : linkabilityAdjacencyList.values()) {
-            for (int weight : receivers.values()) {
-                weightCounts.put(weight,
-                        weightCounts.getOrDefault(weight, 0) + 1);
+        Iterator<ConcurrentHashMap<String, Integer>> outerIt = linkabilityAdjacencyList.values().iterator();
+        while (outerIt.hasNext()) {
+            ConcurrentHashMap<String, Integer> receivers = outerIt.next();
+
+            Iterator<Integer> weightIt = receivers.values().iterator();
+            while (weightIt.hasNext()) {
+                int weight = weightIt.next();
+                weightCounts.put(weight, weightCounts.getOrDefault(weight, 0) + 1);
             }
         }
 
-        for (Integer weight : weightCounts.keySet()) {
+        Iterator<Integer> keyIt = weightCounts.keySet().iterator();
+        while (keyIt.hasNext()) {
+            Integer weight = keyIt.next();
             System.out.println("Weight " + weight + ": " + weightCounts.get(weight));
         }
     }

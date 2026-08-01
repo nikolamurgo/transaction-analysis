@@ -26,10 +26,14 @@ public class ParallelLineReader {
         }
 
         producer.start();
-        for (Thread consumer : consumers) consumer.start();
+        for (int i = 0; i < consumers.length; i++) {
+            consumers[i].start();
+        }
 
         producer.join();
-        for (Thread consumer : consumers) consumer.join();
+        for (int i = 0; i < consumers.length; i++) {
+            consumers[i].join();
+        }
     }
 
     private static class ProducerTask implements Runnable {
