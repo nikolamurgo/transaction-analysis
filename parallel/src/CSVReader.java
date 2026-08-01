@@ -1,68 +1,61 @@
 import utils.Logger;
+import utils.ParallelLineReader;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.util.function.Consumer;
 
 public class CSVReader {
 
 
-    public void readETN(String filePath, EtnGraph etnGraph) throws FileNotFoundException {
-        // size for buffer reader 64KB, to speed up reading large files
-        BufferedReader br = new BufferedReader(new java.io.FileReader(filePath), 65536);
-        String line;
-        try {
-            while ((line = br.readLine()) != null) {
-                int col = 0;
-                int start = 0;
-                String sender = null;
-                String receiver = null;
+    public void readETN(String filePath, EtnGraph etnGraph) throws InterruptedException {
+        int workerCount = Runtime.getRuntime().availableProcessors();
+        ParallelLineReader.process(filePath, workerCount, false, new EtnLineHandler(etnGraph));
+    }
 
-                for (int i = 0; i < line.length(); i++) {
-                    if (line.charAt(i) == ',') {
-                        if (col == 5) sender = line.substring(start, i);
-                        if (col == 6) receiver = line.substring(start, i);
-                        col++;
-                        start = i + 1;
-                        if (col > 6) break;
-                    }
-                }
+    // parses 1 etn transaction line and adds it to the graph
+    private static class EtnLineHandler implements Consumer<String> {
+        private final EtnGraph etnGraph;
 
-                etnGraph.addTransaction(sender, receiver);
-            }
-
-            br.close();
-
-        }catch (Exception e){
-            e.printStackTrace();
+        EtnLineHandler(EtnGraph etnGraph) {
+            this.etnGraph = etnGraph;
         }
 
+        public void accept(String line) {
+            int col = 0;
+            int start = 0;
+            String sender = null;
+            String receiver = null;
+
+            for (int i = 0; i < line.length(); i++) {
+                if (line.charAt(i) == ',') {
+                    if (col == 5) sender = line.substring(start, i);
+                    if (col == 6) receiver = line.substring(start, i);
+                    col++;
+                    start = i + 1;
+                    if (col > 6) break;
+                }
+            }
+
+            etnGraph.addTransaction(sender, receiver);
+        }
     }
 
 
     // read the boredapeyachclub csv
-    public void readNFTfile(String filePath) throws FileNotFoundException {
-        BufferedReader br = new BufferedReader(new FileReader(filePath));
-        String line;
-        String sender;
-        String receiver;
-        String[] parts;
-        try {
-            br.readLine(); // skip first line header
+    public void readNFTfile(String filePath) throws InterruptedException {
+        int workerCount = Runtime.getRuntime().availableProcessors();
+        ParallelLineReader.process(filePath, workerCount, true, new NftLineHandler());
+        Logger.info("NFT addresses loaded. Count: " + NFTAddresses.nftAddresses.size());
+    }
 
-            while ((line = br.readLine()) != null) {
-                parts = line.split(",");
-                sender = parts[4].trim();
-                receiver = parts[5].trim();
-                NFTAddresses.addNFTAddress(sender);
-                NFTAddresses.addNFTAddress(receiver);
-            }
-            Logger.info("NFT addresses loaded. Count: " + NFTAddresses.nftAddresses.size());
-            br.close();
-        }catch (Exception e){
-            Logger.error(e.getMessage());
+    // parses 1 nft transfer line and adds both addresses to the nft address set
+    private static class NftLineHandler implements Consumer<String> {
+        public void accept(String line) {
+            String[] parts = line.split(",");
+            String sender = parts[4].trim();
+            String receiver = parts[5].trim();
+            NFTAddresses.addNFTAddress(sender);
+            NFTAddresses.addNFTAddress(receiver);
         }
-
     }
 
 }
