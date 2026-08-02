@@ -63,6 +63,12 @@ public class Main {
                 mergeEdges(java.util.Arrays.asList(received));
                 Logger.info("Rank 0 received " + count + " edges from rank " + sourceRank + ".");
             }
+
+            LinkabilityNetwork.exportToCSV("data/linkability.csv");
+            Logger.info("Linkability Network exported to CSV.");
+
+            Logger.info("Weight counts in Linkability Network:");
+            LinkabilityNetwork.printWeightCounts();
         }
 
 
