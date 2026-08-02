@@ -29,3 +29,7 @@ bin/
 .DS_Store
 
 data/
+
+### MPJ Express (vendored library, fully tracked despite matching generic rules above) ###
+!distributed/mpj-v0_44/
+!distributed/mpj-v0_44/**
